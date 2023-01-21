@@ -40,6 +40,10 @@ class ServerList {
         return false;
     }
 
+    bool Check (int _inputNadeoRoomId) {
+        return false;
+    }
+
     void Save() {
         string path = IO::FromStorageFolder("ServerList.json");
         auto json = Json::Object();

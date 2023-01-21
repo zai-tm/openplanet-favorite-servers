@@ -1,6 +1,27 @@
 ServerList serv;
 bool list_visible = false;
-void RenderMenu() {
+void RenderMenuMain() {
+    auto app = cast<CTrackMania>(GetApp());
+    if (UI::BeginMenu("\\$26c"+Icons::Heart+"\\$z Favorite Servers", true)) {
+        if (UI::MenuItem("\\$48e"+Icons::ListAlt+"\\$z Show list", "", list_visible)) {
+            list_visible = !list_visible;
+        }
+        auto serverInfo = cast<CGameCtnNetServerInfo>(app.Network.ServerInfo);
+        if (!serv.Check(serverInfo.ServerLogin)) {
+            if (UI::MenuItem("\\$48e"+Icons::Plus+"\\$z Add server to favorites", "", false, serverInfo !is null && serverInfo.ServerLogin != "")) {
+                serv.Add(serverInfo.ServerLogin, serverInfo.ServerName);
+                UI::ShowNotification("Favorite Servers", "Server added to favorites!", 5000);
+            }
+        } else {
+            if (UI::MenuItem("\\$e48"+Icons::Minus+"\\$z Remove server from favorites")) {
+                serv.Remove(serverInfo.ServerLogin);
+                UI::ShowNotification("Favorite Servers", "Server removed from favorites!", 5000);
+            }
+        }
+        UI::EndMenu();
+    }
+}
+/*void RenderMenu() {
     auto app = cast<CTrackMania>(GetApp());
     if (UI::MenuItem("\\$26c"+Icons::Heart+"\\$z Favorite Servers", "", list_visible)) {
         list_visible = !list_visible;
@@ -20,7 +41,7 @@ void RenderMenu() {
         }
 
     }
-}
+}*/
 void RenderInterface() {
     if (!list_visible) {
         return;
@@ -33,7 +54,14 @@ void RenderInterface() {
                 for (uint i = 0; i < serv.list.Length; i++) {
                     if (UI::Button(serv.list[i].name)) {
                         if (Permissions::PlayPublicClubRoom()) {
-                            api.Dialog_JoinServer(serv.list[i].login, "", false, false, "", false, false);
+                            //api.Dialog_JoinServer(serv.list[i].login, "", false, false, "", false, false);
+                            JoinServer(serv.list[i].login, false);
+                        }
+                    }
+                    UI::SameLine();
+                    if (UI::Button(Icons::Eye)) {
+                        if (Permissions::PlayPublicClubRoom()) {
+                            JoinServer(serv.list[i].login, true);
                         }
                     }
                 }
@@ -47,4 +75,14 @@ void RenderInterface() {
 
 void Main() {
     serv.Load();
+}
+
+void JoinServer(string _login, bool spectate) {
+    auto app = cast<CTrackMania>(GetApp());
+    auto api = cast<CGameManiaPlanetScriptAPI>(app.ManiaPlanetScriptAPI);
+    if (spectate) {
+        api.OpenLink("#qspectate=" + _login, CGameManiaPlanetScriptAPI::ELinkType::ManialinkBrowser);
+    } else {
+        api.OpenLink("#qjoin=" + _login, CGameManiaPlanetScriptAPI::ELinkType::ManialinkBrowser);
+    }
 }
